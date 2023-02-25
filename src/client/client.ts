@@ -1,5 +1,6 @@
 import * as THREE from 'three'
 import { GLTFLoader, GLTF } from 'three/examples/jsm/loaders/GLTFLoader';
+import { OBJLoader } from 'three/examples/jsm/loaders/OBJLoader';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import { map } from './map';
 import { Object3D } from 'three';
@@ -19,8 +20,8 @@ renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 document.body.appendChild(renderer.domElement)
 
 // ADD CONTROLS
-// const controls = new OrbitControls(camera, renderer.domElement);
-const userControls = true;
+const controls = new OrbitControls(camera, renderer.domElement);
+const userControls = false;
 
 // ADD AXIS HELPER
 const axesHelper = new THREE.AxesHelper( 5 );
@@ -92,15 +93,16 @@ scene.add(sun);
 const objects: Record<string, THREE.Object3D> = {};
 let tent: THREE.Object3D;
 var loader = new GLTFLoader();
-loader.load('water-hex.glb', gltf => {
+loader.load('water.glb', gltf => {
     onModelLoad(gltf, 'water')
 });
-loader.load('grassland-hex.glb', gltf => {
+loader.load('grassland.glb', gltf => {
     onModelLoad(gltf, 'grassland')
 });
-loader.load('desert-hex.glb', gltf => {
+loader.load('desert.glb', gltf => {
     onModelLoad(gltf, 'desert')
 });
+
 loader.load('scene.gltf', gltf => {
 
     gltf.scene.traverse(function (child) {
@@ -124,34 +126,18 @@ loader.load('scene.gltf', gltf => {
 
 const onModelLoad = (gltf: GLTF, type: string) => {
 
-    // gltf.scene.traverse(function (child) {
-    //     let childMesh: THREE.Mesh = child as THREE.Mesh;
-    //     if (childMesh.isMesh) {
-    //         child.castShadow = true
-    //         child.receiveShadow = true
-    //     }
-    // })
-
-    let m: THREE.Mesh = gltf.scene.children[0] as THREE.Mesh;
-    let hexMesh = new THREE.Mesh(m.geometry, m.material) as Object3D;
-
-    hexMesh.receiveShadow = true;
-    hexMesh.rotation.set(-Math.PI/2, 0, 0);
-    objects[type] = hexMesh
+    gltf.scene.rotation.set(-Math.PI/2, 0, 0);   
+    gltf.scene.receiveShadow = true;
+    objects[type] = gltf.scene
 
     //Check if all models loaded
     if (Object.keys(objects).length === 3) {
-        const edge = new THREE.EdgesGeometry(m.geometry);
-        const material = new THREE.LineBasicMaterial({ color: 0x000000 });
-        const edges = new THREE.LineSegments(edge, material);
-        edges.rotation.set(-Math.PI/2, 0, 0);
-        objects['edge'] = edges;
         buildMap();
     }
 }
 
-const xOneUnit = 1.73;
-const yOneUnit = 1.5;
+const xOneUnit = 3.467;
+const yOneUnit = 3.002;
 const buildMap = () => {
     for (let i = 0; i < map.length; i++) {
         for (let j = 0; j < map[i].length; j++) {
@@ -161,19 +147,14 @@ const buildMap = () => {
             } else if (map[i][j].type === 'DST') {
                 hexagon = objects.desert.clone();
             }
-            let edgeCopy = objects.edge.clone();
             if (i % 2 === 0) {
                 hexagon.position.set((xOneUnit / 2)  + (j * xOneUnit), i * -yOneUnit, -0.25);
-                edgeCopy.position.set((xOneUnit / 2)  + (j * xOneUnit), i * -yOneUnit, -0.25);
             } else {
                 hexagon.position.set(j * xOneUnit, i * -yOneUnit, -0.25);
-                edgeCopy.position.set(j * xOneUnit, i * -yOneUnit, -0.25);
             }
             
             hexagon.receiveShadow = true;
-            
             scene.add(hexagon);
-            scene.add(edgeCopy);
         }
     }
 }
@@ -190,6 +171,7 @@ let xMouseClick = 0;
 let yMouseClick = 0;
 let enablePan = false;
 const onMouseDown = (event: MouseEvent) => {
+    console.log()
     if (event.button === 0 && userControls) {
         enablePan = true;
         xMouseClick = event.x;
@@ -201,6 +183,8 @@ const onMouseUp = (event: MouseEvent) => {
         enablePan = false;
         xCameraPosition = xCameraPosition + xCameraDiff;
         yCameraPosition = yCameraPosition + yCameraDiff;
+        xCameraDiff = 0;
+        yCameraDiff = 0;
     }
 }
 let xCameraDiff = 0;
@@ -230,7 +214,7 @@ const animate = () => {
         camera.position.set(xCameraPosition + xCameraDiff, yCameraPosition + yCameraDiff, zCameraPosition)
     }
 
-    // controls.update()
+    controls.update()
     render()
 }
 
