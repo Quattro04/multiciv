@@ -39,7 +39,3 @@ You should see a rotating green wireframe cube, and be able to rotate it further
 ```bash
 code .
 ```
-
-GitHub : [https://github.com/Sean-Bradley/First-Car-Shooter](https://github.com/Sean-Bradley/First-Car-Shooter)
-
-![First Car Shooter](/docs/fcs-demo.gif)
